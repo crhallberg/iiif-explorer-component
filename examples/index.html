@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>component-boilerplate: test</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="css/component-boilerplate.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.js"></script>
+    <script src="js/component-boilerplate.bundle.js"></script>
+</head>
+<body>
+    
+    <div id="component"></div>
+
+    <script>
+
+        var component;
+        
+        $(function() {
+
+            component = new MyComponents.ExampleComponent({
+                element: "#component"
+            });
+            
+            component.on('test', function(args) {
+                alert(args);
+            });
+            
+            component.test();
+            
+        });
+    </script>
+</body>
+</html>
