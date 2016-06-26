@@ -1,20 +1,20 @@
 // iiif-explorer-component v1.0.1 https://github.com/edsilv/iiif-explorer-component#readme
-declare namespace MyComponents {
-    class ExampleComponent extends Components.BaseComponent {
-        constructor(options: IExampleComponentOptions);
+declare namespace IIIFComponents {
+    class ExplorerComponent extends Components.BaseComponent {
+        constructor(options: IExplorerComponentOptions);
         test(): void;
         protected _init(): boolean;
-        protected _getDefaultOptions(): IExampleComponentOptions;
+        protected _getDefaultOptions(): IExplorerComponentOptions;
         protected _resize(): void;
     }
 }
-declare namespace MyComponents.ExampleComponent {
+declare namespace IIIFComponents.ExplorerComponent {
     class Events {
         static TEST: string;
     }
 }
 
-declare namespace MyComponents {
-    interface IExampleComponentOptions extends Components.IBaseComponentOptions {
+declare namespace IIIFComponents {
+    interface IExplorerComponentOptions extends Components.IBaseComponentOptions {
     }
 }

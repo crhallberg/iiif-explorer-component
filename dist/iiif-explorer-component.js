@@ -5,54 +5,54 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var MyComponents;
-(function (MyComponents) {
-    var ExampleComponent = (function (_super) {
-        __extends(ExampleComponent, _super);
-        function ExampleComponent(options) {
+var IIIFComponents;
+(function (IIIFComponents) {
+    var ExplorerComponent = (function (_super) {
+        __extends(ExplorerComponent, _super);
+        function ExplorerComponent(options) {
             _super.call(this, options);
             this._init();
             this._resize();
         }
-        ExampleComponent.prototype.test = function () {
-            this._emit(ExampleComponent.Events.TEST, [1, 2, 'three']);
+        ExplorerComponent.prototype.test = function () {
+            this._emit(ExplorerComponent.Events.TEST, [1, 2, 'three']);
         };
-        ExampleComponent.prototype._init = function () {
+        ExplorerComponent.prototype._init = function () {
             var success = _super.prototype._init.call(this);
             if (!success) {
                 console.error("Component failed to initialise");
             }
-            this._$element.append("I am an example component");
+            this._$element.append("I am an explorer component");
             return success;
         };
-        ExampleComponent.prototype._getDefaultOptions = function () {
+        ExplorerComponent.prototype._getDefaultOptions = function () {
             return {};
         };
-        ExampleComponent.prototype._resize = function () {
+        ExplorerComponent.prototype._resize = function () {
         };
-        return ExampleComponent;
+        return ExplorerComponent;
     }(Components.BaseComponent));
-    MyComponents.ExampleComponent = ExampleComponent;
-})(MyComponents || (MyComponents = {}));
-var MyComponents;
-(function (MyComponents) {
-    var ExampleComponent;
-    (function (ExampleComponent) {
+    IIIFComponents.ExplorerComponent = ExplorerComponent;
+})(IIIFComponents || (IIIFComponents = {}));
+var IIIFComponents;
+(function (IIIFComponents) {
+    var ExplorerComponent;
+    (function (ExplorerComponent) {
         var Events = (function () {
             function Events() {
             }
             Events.TEST = 'test';
             return Events;
         }());
-        ExampleComponent.Events = Events;
-    })(ExampleComponent = MyComponents.ExampleComponent || (MyComponents.ExampleComponent = {}));
-})(MyComponents || (MyComponents = {}));
+        ExplorerComponent.Events = Events;
+    })(ExplorerComponent = IIIFComponents.ExplorerComponent || (IIIFComponents.ExplorerComponent = {}));
+})(IIIFComponents || (IIIFComponents = {}));
 (function (w) {
-    if (!w.MyComponents) {
-        w.MyComponents = MyComponents;
+    if (!w.IIIFComponents) {
+        w.IIIFComponents = IIIFComponents;
     }
     else {
-        w.MyComponents.ExampleComponent = MyComponents.ExampleComponent;
+        w.IIIFComponents.ExplorerComponent = IIIFComponents.ExplorerComponent;
     }
 })(window);
 

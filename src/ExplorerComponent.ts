@@ -1,7 +1,7 @@
-namespace MyComponents {
-    export class ExampleComponent extends Components.BaseComponent {
+namespace IIIFComponents {
+    export class ExplorerComponent extends Components.BaseComponent {
 
-        constructor(options: IExampleComponentOptions) {
+        constructor(options: IExplorerComponentOptions) {
             super(options);
             
             this._init();
@@ -9,7 +9,7 @@ namespace MyComponents {
         }
 
         public test(): void {
-            this._emit(ExampleComponent.Events.TEST, [1, 2, 'three']);
+            this._emit(ExplorerComponent.Events.TEST, [1, 2, 'three']);
         }
 
         protected _init(): boolean {
@@ -19,13 +19,13 @@ namespace MyComponents {
                 console.error("Component failed to initialise");
             }
             
-            this._$element.append("I am an example component");
+            this._$element.append("I am an explorer component");
 
             return success;
         }
         
-        protected _getDefaultOptions(): IExampleComponentOptions {
-            return <IExampleComponentOptions>{
+        protected _getDefaultOptions(): IExplorerComponentOptions {
+            return <IExplorerComponentOptions>{
             }
         }
         
@@ -35,16 +35,16 @@ namespace MyComponents {
     }
 }
 
-namespace MyComponents.ExampleComponent {
+namespace IIIFComponents.ExplorerComponent {
     export class Events {
         static TEST: string = 'test';
     }
 }
 
 (function(w) {
-    if (!w.MyComponents){
-        w.MyComponents = MyComponents;
+    if (!w.IIIFComponents){
+        w.IIIFComponents = IIIFComponents;
     } else {
-        w.MyComponents.ExampleComponent = MyComponents.ExampleComponent;
+        w.IIIFComponents.ExplorerComponent = IIIFComponents.ExplorerComponent;
     }
 })(window);
