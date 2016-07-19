@@ -1,5 +1,5 @@
 namespace IIIFComponents {
-    export class ExplorerComponent extends Components.BaseComponent {
+    export class ExplorerComponent extends _Components.BaseComponent {
 
         constructor(options: IExplorerComponentOptions) {
             super(options);

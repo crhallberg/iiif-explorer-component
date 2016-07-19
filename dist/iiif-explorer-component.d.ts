@@ -1,6 +1,6 @@
-// iiif-explorer-component v1.0.1 https://github.com/edsilv/iiif-explorer-component#readme
+// iiif-explorer-component v1.0.1 https://github.com/viewdir/iiif-explorer-component#readme
 declare namespace IIIFComponents {
-    class ExplorerComponent extends Components.BaseComponent {
+    class ExplorerComponent extends _Components.BaseComponent {
         constructor(options: IExplorerComponentOptions);
         test(): void;
         protected _init(): boolean;
@@ -15,6 +15,6 @@ declare namespace IIIFComponents.ExplorerComponent {
 }
 
 declare namespace IIIFComponents {
-    interface IExplorerComponentOptions extends Components.IBaseComponentOptions {
+    interface IExplorerComponentOptions extends _Components.IBaseComponentOptions {
     }
 }

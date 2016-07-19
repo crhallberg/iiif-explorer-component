@@ -1,5 +1,5 @@
 namespace IIIFComponents{
-    export interface IExplorerComponentOptions extends Components.IBaseComponentOptions {
+    export interface IExplorerComponentOptions extends _Components.IBaseComponentOptions {
 
     }
 }
