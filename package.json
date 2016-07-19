@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/viewdir/iiif-explorer-component.git"
   },
-  "author": "Edward Silverton <e.silverton@gmail.com> (http://edsilv.com)",
+  "author": "Edward Silverton <ed@edsilv.com> (http://edsilv.com)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/viewdir/iiif-explorer-component/issues"
