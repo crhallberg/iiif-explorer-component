@@ -42,6 +42,12 @@
                     helper: h
                 });
 
+                component.on('explorerNodeSelected', function(args) {
+                    var node = args[0];
+                    console.log(node);
+                    alert('selected: ' + node.label);
+                });
+
                 component.databind();
 
             }).catch(function(e) {

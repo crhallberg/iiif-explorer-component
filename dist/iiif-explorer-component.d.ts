@@ -6,7 +6,6 @@ declare namespace IIIFComponents {
         private _current;
         private _parents;
         constructor(options: IExplorerComponentOptions);
-        test(): void;
         protected _init(): boolean;
         protected _draw(): void;
         protected _sortCollectionsFirst(a: Manifold.ITreeNode, b: Manifold.ITreeNode): number;
@@ -21,6 +20,7 @@ declare namespace IIIFComponents {
 declare namespace IIIFComponents.ExplorerComponent {
     class Events {
         static TEST: string;
+        static EXPLORER_NODE_SELECTED: string;
     }
 }
 

@@ -15,9 +15,6 @@ var IIIFComponents;
             this._init();
             this._resize();
         }
-        ExplorerComponent.prototype.test = function () {
-            this._emit(ExplorerComponent.Events.TEST, [1, 2, 'three']);
-        };
         ExplorerComponent.prototype._init = function () {
             var success = _super.prototype._init.call(this);
             if (!success) {
@@ -79,6 +76,9 @@ var IIIFComponents;
                         self.contents('.explorer-item')
                             .on('click', 'a.explorer-folder-link', function () {
                             that.openFolder(self.data);
+                        })
+                            .on('click', 'a.explorer-item-link', function () {
+                            that._emit(ExplorerComponent.Events.EXPLORER_NODE_SELECTED, self.data);
                         });
                     },
                     template: $.templates.itemTemplate
@@ -105,7 +105,6 @@ var IIIFComponents;
         };
         ExplorerComponent.prototype._switchToFolder = function (node) {
             node.nodes.sort(this._sortCollectionsFirst);
-            console.log(node);
             this._parents.push(node);
             this._current = node;
             this._draw();
@@ -116,6 +115,7 @@ var IIIFComponents;
                 node.data.load().then(function (collection) {
                     console.log(collection);
                     node.nodes = collection.members.map(function (op) {
+                        // TODO: OFFICIAL CONVERSION MUST EXIST
                         var data = op;
                         data.type = op.__jsonld['@type'].toLowerCase();
                         var treeNode = new Manifesto.TreeNode(op.__jsonld.label, data);
@@ -158,6 +158,7 @@ var IIIFComponents;
             function Events() {
             }
             Events.TEST = 'test';
+            Events.EXPLORER_NODE_SELECTED = 'explorerNodeSelected';
             return Events;
         }());
         ExplorerComponent.Events = Events;

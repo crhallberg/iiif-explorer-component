@@ -13,10 +13,6 @@ namespace IIIFComponents {
             this._resize();
         }
 
-        public test(): void {
-            this._emit(ExplorerComponent.Events.TEST, [1, 2, 'three']);
-        }
-
         protected _init(): boolean {
             var success: boolean = super._init();
 
@@ -85,6 +81,9 @@ namespace IIIFComponents {
                         self.contents('.explorer-item')
                             .on('click', 'a.explorer-folder-link', function() {
                                 that.openFolder(self.data);
+                            })
+                            .on('click', 'a.explorer-item-link', function() {
+                                that._emit(ExplorerComponent.Events.EXPLORER_NODE_SELECTED, self.data);
                             });
                     },
                     template: $.templates.itemTemplate
@@ -116,7 +115,6 @@ namespace IIIFComponents {
 
         protected _switchToFolder(node: Manifold.ITreeNode): void {
             node.nodes.sort(this._sortCollectionsFirst);
-            console.log(node);
             this._parents.push(node);
             this._current = node;
             this._draw();
@@ -128,6 +126,7 @@ namespace IIIFComponents {
                 node.data.load().then(function (collection: Manifesto.Collection): void {
                     console.log(collection);
                     node.nodes = collection.members.map(function (op: Manifesto.IIIFResource): Manifesto.TreeNode {
+                        // TODO: OFFICIAL CONVERSION MUST EXIST
                         let data: any = op;
                         data.type = op.__jsonld['@type'].toLowerCase();
                         let treeNode: Manifesto.TreeNode = new Manifesto.TreeNode(op.__jsonld.label, data);
@@ -167,6 +166,7 @@ namespace IIIFComponents {
 namespace IIIFComponents.ExplorerComponent {
     export class Events {
         static TEST: string = 'test';
+        static EXPLORER_NODE_SELECTED: string = 'explorerNodeSelected';
     }
 }
 
