@@ -3,30 +3,51 @@
 <head>
     <title>component-boilerplate: test</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="css/component-boilerplate.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.js"></script>
-    <script src="js/iiif-explorer-component.bundle.js"></script>
+    <link rel="stylesheet" href="../dist/iiif-explorer-component.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsviews/0.9.76/jsviews.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.2.2/es6-promise.min.js"></script>
+    <script src="js/base-component.bundle.js"></script>
+    <script src="js/iiif-explorer-component.js"></script>
+    <script src="js/manifold.bundle.js"></script>
 </head>
 <body>
-    
-    <div id="component"></div>
 
+    <div id="explorer" class="iiif-explorer-component">Loading...</div>
     <script>
+        var helper, component;
 
-        var component;
-        
         $(function() {
 
-            component = new IIIFComponents.ExplorerComponent({
-                element: "#component"
+            // http://wellcomelibrary.org/iiif/b18035723/manifest (Wunder der Vererbung)
+            // http://wellcomelibrary.org/iiif/collection/b19974760 (Chemist and Druggist)
+            // http://wellcomelibrary.org/iiif/collection/b18031511 (Biological Basis of Medicine)
+            // http://digital.library.villanova.edu/Collection/vudl:3/IIIF (Villanova Collection)
+            // http://dams.llgc.org.uk/iiif/newspapers/4651124.json (Abergele and Pensarn Visitor 1909-1910)
+            // http://wellcomelibrary.org/iiif/b19646045/manifest (Ranges with overlapping canvases)
+            // https://edsilv.github.io/test-manifests/table-of-contents.json
+            Manifold.loadManifest({
+                iiifResourceUri: 'http://digital.library.villanova.edu/Collection/vudl:3/IIIF',
+                collectionIndex: 0,
+                manifestIndex: 0,
+                sequenceIndex: 0,
+                canvasIndex: 0
+            }).then(function(h){
+
+                helper = h;
+
+                component = new IIIFComponents.ExplorerComponent({
+                    element: "#explorer",
+                    helper: h
+                });
+
+                component.databind();
+
+            }).catch(function(e) {
+                console.error(e);
+                console.error('failed to load manifest');
             });
-            
-            component.on('test', function(args) {
-                alert(args);
-            });
-            
-            component.test();
-            
         });
     </script>
 </body>

@@ -11,6 +11,7 @@ var IIIFComponents;
         __extends(ExplorerComponent, _super);
         function ExplorerComponent(options) {
             _super.call(this, options);
+            this._parents = [];
             this._init();
             this._resize();
         }
@@ -22,11 +23,126 @@ var IIIFComponents;
             if (!success) {
                 console.error("Component failed to initialise");
             }
-            this._$element.append("I am an explorer component");
+            var that = this;
+            this._$view = $('<div class="explorer-view"></div>');
+            this._$element.empty();
+            this._$element.append(this._$view);
+            $.templates({
+                pageTemplate: '<div class="breadcrumbs">\
+                                    {^{for parents}}\
+                                        {^{breadcrumb/}}\
+                                    {{/for}}\
+                                </div>\
+                                <hr/>\
+                                <div class="items">\
+                                    {^{for current.nodes}}\
+                                        {^{item/}}\
+                                    {{/for}}\
+                                </div>',
+                breadcrumbTemplate: '<div class="explorer-breadcrumb">\
+                                        <i class="fa fa-caret-down"></i>\
+                                        <i class="fa fa-folder-open-o"></i>\
+                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                    </div>',
+                itemTemplate: '<div class="explorer-item">\
+                                    {{if data.type === "sc:collection"}}\
+                                        <i class="fa fa-folder"></i>\
+                                        <a id="item-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                    {{/if}}\
+                                    {{if data.type === "sc:manifest"}}\
+                                        <i class="fa fa-file-text-o"></i>\
+                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                    {{/if}}\
+                                </div>'
+            });
+            $.views.tags({
+                breadcrumb: {
+                    init: function (tagCtx, linkCtx, ctx) {
+                        this.data = tagCtx.view.data;
+                    },
+                    onAfterLink: function () {
+                        var self = this;
+                        self.contents('.explorer-breadcrumb')
+                            .on('click', 'a.explorer-breadcrumb-link', function () {
+                            that.gotoBreadcrumb(self.data);
+                        });
+                    },
+                    template: $.templates.breadcrumbTemplate
+                },
+                item: {
+                    init: function (tagCtx, linkCtx, ctx) {
+                        this.data = tagCtx.view.data;
+                        this.data.parents;
+                    },
+                    onAfterLink: function () {
+                        var self = this;
+                        self.contents('.explorer-item')
+                            .on('click', 'a.explorer-folder-link', function () {
+                            that.openFolder(self.data);
+                        });
+                    },
+                    template: $.templates.itemTemplate
+                }
+            });
             return success;
         };
+        ExplorerComponent.prototype._draw = function () {
+            this._$view.link($.templates.pageTemplate, { parents: this._parents, current: this._current });
+        };
+        ExplorerComponent.prototype._sortCollectionsFirst = function (a, b) {
+            if (a.data.type === b.data.type) {
+                // Alphabetical
+                return a.label < b.label ? -1 : 1;
+            }
+            // Collections first
+            return b.data.type.indexOf('collection') - a.data.type.indexOf('collection');
+        };
+        ExplorerComponent.prototype.gotoBreadcrumb = function (node) {
+            var index = this._parents.indexOf(node);
+            this._current = this._parents[index];
+            this._parents = this._parents.slice(0, index + 1);
+            this._draw();
+        };
+        ExplorerComponent.prototype._switchToFolder = function (node) {
+            node.nodes.sort(this._sortCollectionsFirst);
+            console.log(node);
+            this._parents.push(node);
+            this._current = node;
+            this._draw();
+        };
+        ExplorerComponent.prototype.openFolder = function (node) {
+            if (!node.data.isLoaded) {
+                var that_1 = this;
+                node.data.load().then(function (collection) {
+                    console.log(collection);
+                    node.nodes = collection.members.map(function (op) {
+                        var data = op;
+                        data.type = op.__jsonld['@type'].toLowerCase();
+                        var treeNode = new Manifesto.TreeNode(op.__jsonld.label, data);
+                        treeNode.parentNode = node;
+                        return treeNode;
+                    });
+                    that_1._switchToFolder(node);
+                });
+            }
+            else {
+                this._switchToFolder(node);
+            }
+        };
+        ExplorerComponent.prototype.databind = function () {
+            var root = this.options.helper.getTree(this.options.topRangeIndex, this.options.treeSortType);
+            root.nodes.sort(this._sortCollectionsFirst);
+            console.log(root);
+            this._parents.push(root);
+            this._current = root;
+            this._draw();
+        };
         ExplorerComponent.prototype._getDefaultOptions = function () {
-            return {};
+            return {
+                helper: null,
+                topRangeIndex: 0,
+                treeSortType: Manifold.TreeSortType.NONE
+            };
         };
         ExplorerComponent.prototype._resize = function () {
         };

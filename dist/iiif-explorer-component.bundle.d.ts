@@ -31,7 +31,7 @@ declare namespace _Components {
     }
 }
 
-// manifesto.js v1.0.0 https://github.com/viewdir/manifesto
+// manifesto.js v2.0.1 https://github.com/viewdir/manifesto
 declare module exjs {
     var version: string;
 }
@@ -340,6 +340,7 @@ declare var ex: typeof exjs.en;
 declare module exjs {
 }
 
+// extensions v0.1.11 https://github.com/edsilv/extensions
 declare function escape(s: string): any;
 declare function unescape(s: string): any;
 
@@ -959,6 +960,10 @@ declare module Manifesto {
         static getInexactLocale(locale: string): string;
         static getLocalisedValue(resource: any, locale: string): string;
         static generateTreeNodeIds(treeNode: ITreeNode, index?: number): void;
+        static isImageProfile(profile: Manifesto.ServiceProfile): boolean;
+        static isLevel0ImageProfile(profile: Manifesto.ServiceProfile): boolean;
+        static isLevel1ImageProfile(profile: Manifesto.ServiceProfile): boolean;
+        static isLevel2ImageProfile(profile: Manifesto.ServiceProfile): boolean;
         static loadResource(uri: string): Promise<string>;
         static loadExternalResource(resource: IExternalResource, tokenStorageStrategy: string, clickThrough: (resource: IExternalResource) => Promise<void>, restricted: (resource: IExternalResource) => Promise<void>, login: (resource: IExternalResource) => Promise<void>, getAccessToken: (resource: IExternalResource, rejectOnError: boolean) => Promise<IAccessToken>, storeAccessToken: (resource: IExternalResource, token: IAccessToken, tokenStorageStrategy: string) => Promise<void>, getStoredAccessToken: (resource: IExternalResource, tokenStorageStrategy: string) => Promise<IAccessToken>, handleResourceResponse: (resource: IExternalResource) => Promise<any>, options?: IManifestoOptions): Promise<IExternalResource>;
         static createError(name: string, message: string): Error;
@@ -1172,15 +1177,7 @@ interface IManifesto {
     AnnotationMotivation: Manifesto.AnnotationMotivation;
     create: (manifest: string, options?: Manifesto.IManifestoOptions) => Manifesto.IIIIFResource;
     ElementType: Manifesto.ElementType;
-    getRenderings(resource: any): Manifesto.IRendering[];
-    getService: (resource: any, profile: Manifesto.ServiceProfile | string) => Manifesto.IService;
-    getTreeNode(): Manifesto.ITreeNode;
     IIIFResourceType: Manifesto.IIIFResourceType;
-    isImageProfile(profile: Manifesto.ServiceProfile): boolean;
-    isLevel0ImageProfile(profile: Manifesto.ServiceProfile): boolean;
-    isLevel1ImageProfile(profile: Manifesto.ServiceProfile): boolean;
-    isLevel2ImageProfile(profile: Manifesto.ServiceProfile): boolean;
-    loadExternalResources: (resources: Manifesto.IExternalResource[], tokenStorageStrategy: string, clickThrough: (resource: Manifesto.IExternalResource) => Promise<void>, restricted: (resource: Manifesto.IExternalResource) => Promise<void>, login: (resource: Manifesto.IExternalResource) => Promise<void>, getAccessToken: (resource: Manifesto.IExternalResource, rejectOnError: boolean) => Promise<Manifesto.IAccessToken>, storeAccessToken: (resource: Manifesto.IExternalResource, token: Manifesto.IAccessToken, tokenStorageStrategy: string) => Promise<void>, getStoredAccessToken: (resource: Manifesto.IExternalResource, tokenStorageStrategy: string) => Promise<Manifesto.IAccessToken>, handleResourceResponse: (resource: Manifesto.IExternalResource) => Promise<any>, options?: Manifesto.IManifestoOptions) => Promise<Manifesto.IExternalResource[]>;
     loadManifest: (uri: string) => Promise<string>;
     ManifestType: Manifesto.ManifestType;
     MetadataItem: any;
@@ -1191,6 +1188,7 @@ interface IManifesto {
     StatusCodes: Manifesto.IStatusCodes;
     Translation: any;
     TranslationCollection: any;
+    TreeNode: any;
     TreeNodeType: Manifesto.TreeNodeType;
     Utils: any;
     ViewingDirection: Manifesto.ViewingDirection;
@@ -1657,11 +1655,35 @@ declare namespace Manifold {
     }
 }
 
+interface JQuery {
+    // jsviews
+    link: any;
+    render: any;
+}
+
+interface JQueryStatic {
+    // jsviews
+    observable: any;
+    templates: any;
+    views: any;
+    view: any;
+}
+
 declare namespace IIIFComponents {
     class ExplorerComponent extends _Components.BaseComponent {
+        options: IExplorerComponentOptions;
+        private _$view;
+        private _current;
+        private _parents;
         constructor(options: IExplorerComponentOptions);
         test(): void;
         protected _init(): boolean;
+        protected _draw(): void;
+        protected _sortCollectionsFirst(a: Manifold.ITreeNode, b: Manifold.ITreeNode): number;
+        gotoBreadcrumb(node: Manifold.ITreeNode): void;
+        protected _switchToFolder(node: Manifold.ITreeNode): void;
+        openFolder(node: Manifold.ITreeNode): void;
+        databind(): void;
         protected _getDefaultOptions(): IExplorerComponentOptions;
         protected _resize(): void;
     }
@@ -1674,5 +1696,8 @@ declare namespace IIIFComponents.ExplorerComponent {
 
 declare namespace IIIFComponents {
     interface IExplorerComponentOptions extends _Components.IBaseComponentOptions {
+        helper: Manifold.IHelper;
+        topRangeIndex: number;
+        treeSortType: Manifold.TreeSortType;
     }
 }
