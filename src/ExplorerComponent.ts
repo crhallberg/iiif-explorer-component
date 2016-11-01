@@ -140,10 +140,48 @@ namespace IIIFComponents {
             }
         }
 
+        protected _followWithin(json: any, callback: (n: any) => any): any {
+          console.log(json.label);
+          let url: any = json.within;
+          let node: Manifesto.TreeNode = new Manifesto.TreeNode(json.label, json);
+          if ($.isArray(url)) { // TODO: Handle arrays
+            callback([]);
+          }
+          let that: any = this;
+          $.ajax({
+            url: url,
+            dataType: 'json'
+          })
+          .done(function (parent:any) {
+            if (typeof parent.within !== 'undefined') {
+              that._followWithin(parent, function(array:any) {
+                array.push(node);
+                callback(array);
+              });
+            } else {
+              callback([parent, node]);
+            }
+          })
+          .fail(function () {
+            callback([node]);
+          });
+        }
+
         public databind(): void {
             let root: Manifold.ITreeNode = this.options.helper.getTree(this.options.topRangeIndex, this.options.treeSortType);
-            root.nodes.sort(this._sortCollectionsFirst);
             console.log(root);
+            root.nodes.sort(this._sortCollectionsFirst);
+            if (typeof root.data.__jsonld.within !== 'undefined') {
+              let that = this;
+              this._followWithin(root.data.__jsonld, function (parents: any) {
+                that._parents = parents;
+                if (root.data.__jsonld['@type'].match(/Manifest/i)) {
+                  that._current = parents[parents.length - 1];
+                }
+                that._draw();
+              });
+              root.label = "Loading...";
+            }
             this._parents.push(root);
             this._current = root;
             this._draw();

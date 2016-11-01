@@ -1682,6 +1682,7 @@ declare namespace IIIFComponents {
         gotoBreadcrumb(node: Manifold.ITreeNode): void;
         protected _switchToFolder(node: Manifold.ITreeNode): void;
         openFolder(node: Manifold.ITreeNode): void;
+        protected _followWithin(json: any, callback: (n: any) => any): any;
         databind(): void;
         protected _getDefaultOptions(): IExplorerComponentOptions;
         protected _resize(): void;

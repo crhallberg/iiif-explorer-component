@@ -129,10 +129,49 @@ var IIIFComponents;
                 this._switchToFolder(node);
             }
         };
+        ExplorerComponent.prototype._followWithin = function (json, callback) {
+            console.log(json.label);
+            var url = json.within;
+            var node = new Manifesto.TreeNode(json.label, json);
+            if ($.isArray(url)) {
+                callback([]);
+            }
+            var that = this;
+            $.ajax({
+                url: url,
+                dataType: 'json'
+            })
+                .done(function (parent) {
+                if (typeof parent.within !== 'undefined') {
+                    that._followWithin(parent, function (array) {
+                        array.push(node);
+                        callback(array);
+                    });
+                }
+                else {
+                    callback([parent, node]);
+                }
+            })
+                .fail(function () {
+                callback([node]);
+            });
+        };
         ExplorerComponent.prototype.databind = function () {
             var root = this.options.helper.getTree(this.options.topRangeIndex, this.options.treeSortType);
-            root.nodes.sort(this._sortCollectionsFirst);
             console.log(root);
+            root.nodes.sort(this._sortCollectionsFirst);
+            if (typeof root.data.__jsonld.within !== 'undefined') {
+                var that_2 = this;
+                this._followWithin(root.data.__jsonld, function (parents) {
+                    that_2._parents = parents;
+                    if (root.data.__jsonld['@type'].match(/Manifest/i)) {
+                        that_2._current = parents[parents.length - 1];
+                    }
+                    console.log(parents);
+                    that_2._draw();
+                });
+                root.label = "Loading...";
+            }
             this._parents.push(root);
             this._current = root;
             this._draw();
