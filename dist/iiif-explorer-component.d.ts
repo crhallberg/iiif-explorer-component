@@ -3,6 +3,7 @@ declare namespace IIIFComponents {
     class ExplorerComponent extends _Components.BaseComponent {
         options: IExplorerComponentOptions;
         private _$view;
+        private _selected;
         private _current;
         private _parents;
         constructor(options: IExplorerComponentOptions);

@@ -3,7 +3,8 @@ namespace IIIFComponents {
 
         public options: IExplorerComponentOptions;
         private _$view: JQuery;
-        private _current: Manifesto.IIIFResource
+        private _selected: Manifesto.IIIFResource;
+        private _current: Manifesto.IIIFResource;
         private _parents: Manifesto.IIIFResource[] = [];
 
         constructor(options: IExplorerComponentOptions) {
@@ -38,23 +39,32 @@ namespace IIIFComponents {
                                         {^{item/}}\
                                     {{/for}}\
                                 </div>',
-                breadcrumbTemplate: '<div class="explorer-breadcrumb">\
+                breadcrumbTemplate: '<div class="explorer-breadcrumb explorer-item">\
                                         <i class="fa fa-folder-open-o"></i>\
-                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
+                                        <a class="explorer-breadcrumb-link explorer-link" href="#" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
                                     </div>',
-                itemTemplate:   '<div class="explorer-item">\
-                                    {{if getIIIFResourceType().value === "sc:collection"}}\
+                itemTemplate:  '{{if getIIIFResourceType().value === "sc:collection"}}\
+                                    <div class="explorer-folder {{:~itemClass(id)}}">\
                                         <i class="fa fa-folder"></i>\
-                                        <a id="folder-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>__jsonld.label}}">\
+                                        <a class="explorer-folder-link explorer-link" href="#" title="{{>__jsonld.label}}">\
                                             {{>__jsonld.label}}\
                                         </a>\
-                                    {{else}}\
+                                {{else}}\
+                                    <div class="explorer-resource {{:~itemClass(id)}}">\
                                         <i class="fa fa-file-text-o"></i>\
-                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>__jsonld.label}}">\
+                                        <a class="explorer-item-link explorer-link" href="#" title="{{>__jsonld.label}}">\
                                             {{>__jsonld.label}}\
                                         </a>\
-                                    {{/if}}\
+                                {{/if}}\
                                 </div>'
+            });
+
+            $.views.helpers({
+                  itemClass: function(id) {
+                      return id === this._selected.id
+                          ? 'explorer-item selected'
+                          : 'explorer-item';
+                  }.bind(this)
             });
 
             $.views.tags({
@@ -84,7 +94,9 @@ namespace IIIFComponents {
                                 that._switchToFolder(self.data);
                             })
                             .on('click', 'a.explorer-item-link', function() {
+                                that._selected = self.data;
                                 that._emit(ExplorerComponent.Events.EXPLORER_NODE_SELECTED, self.data);
+                                that._draw();
                             });
                     },
                     template: $.templates.itemTemplate
@@ -95,8 +107,11 @@ namespace IIIFComponents {
         }
 
         protected _draw(): void {
-            console.log(this._current);
-            this._$view.link($.templates.pageTemplate, { parents: this._parents, current: this._current });
+            let data = { parents: this._parents, current: this._current, selected: '' };
+            if (this._selected) {
+              data.selected = this._selected.id;
+            }
+            this._$view.link($.templates.pageTemplate, data);
         }
 
         protected _sortCollectionsFirst(a: Manifesto.IIIFResource, b: Manifesto.IIIFResource): number {
@@ -162,8 +177,11 @@ namespace IIIFComponents {
                     }
                     that._switchToFolder(<Manifesto.Collection>start);
                 });
-            } else if (root.isCollection()) {
+            }
+            if (root.isCollection()) {
                 this._switchToFolder(<Manifesto.Collection>root);
+            } else {
+                this._selected = root;
             }
         }
 

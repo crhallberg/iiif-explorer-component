@@ -36,23 +36,31 @@ var IIIFComponents;
                                         {^{item/}}\
                                     {{/for}}\
                                 </div>',
-                breadcrumbTemplate: '<div class="explorer-breadcrumb">\
+                breadcrumbTemplate: '<div class="explorer-breadcrumb explorer-item">\
                                         <i class="fa fa-folder-open-o"></i>\
-                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
+                                        <a class="explorer-breadcrumb-link explorer-link" href="#" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
                                     </div>',
-                itemTemplate: '<div class="explorer-item">\
-                                    {{if getIIIFResourceType().value === "sc:collection"}}\
+                itemTemplate: '{{if getIIIFResourceType().value === "sc:collection"}}\
+                                    <div class="explorer-folder {{:~itemClass(id)}}">\
                                         <i class="fa fa-folder"></i>\
-                                        <a id="folder-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>__jsonld.label}}">\
+                                        <a class="explorer-folder-link explorer-link" href="#" title="{{>__jsonld.label}}">\
                                             {{>__jsonld.label}}\
                                         </a>\
-                                    {{else}}\
+                                {{else}}\
+                                    <div class="explorer-resource {{:~itemClass(id)}}">\
                                         <i class="fa fa-file-text-o"></i>\
-                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>__jsonld.label}}">\
+                                        <a class="explorer-item-link explorer-link" href="#" title="{{>__jsonld.label}}">\
                                             {{>__jsonld.label}}\
                                         </a>\
-                                    {{/if}}\
+                                {{/if}}\
                                 </div>'
+            });
+            $.views.helpers({
+                itemClass: function (id) {
+                    return id === this._selected.id
+                        ? 'explorer-item selected'
+                        : 'explorer-item';
+                }.bind(this)
             });
             $.views.tags({
                 breadcrumb: {
@@ -79,7 +87,9 @@ var IIIFComponents;
                             that._switchToFolder(self.data);
                         })
                             .on('click', 'a.explorer-item-link', function () {
+                            that._selected = self.data;
                             that._emit(ExplorerComponent.Events.EXPLORER_NODE_SELECTED, self.data);
+                            that._draw();
                         });
                     },
                     template: $.templates.itemTemplate
@@ -88,8 +98,11 @@ var IIIFComponents;
             return success;
         };
         ExplorerComponent.prototype._draw = function () {
-            console.log(this._current);
-            this._$view.link($.templates.pageTemplate, { parents: this._parents, current: this._current });
+            var data = { parents: this._parents, current: this._current, selected: '' };
+            if (this._selected) {
+                data.selected = this._selected.id;
+            }
+            this._$view.link($.templates.pageTemplate, data);
         };
         ExplorerComponent.prototype._sortCollectionsFirst = function (a, b) {
             var aType = a.getIIIFResourceType().value;
@@ -154,8 +167,11 @@ var IIIFComponents;
                     that_1._switchToFolder(start);
                 });
             }
-            else if (root.isCollection()) {
+            if (root.isCollection()) {
                 this._switchToFolder(root);
+            }
+            else {
+                this._selected = root;
             }
         };
         ExplorerComponent.prototype._getDefaultOptions = function () {
