@@ -3,8 +3,8 @@ namespace IIIFComponents {
 
         public options: IExplorerComponentOptions;
         private _$view: JQuery;
-        private _current: Manifold.ITreeNode
-        private _parents: Manifold.ITreeNode[] = [];
+        private _current: Manifesto.IIIFResource
+        private _parents: Manifesto.IIIFResource[] = [];
 
         constructor(options: IExplorerComponentOptions) {
             super(options);
@@ -34,23 +34,25 @@ namespace IIIFComponents {
                                 </div>\
                                 <hr/>\
                                 <div class="items">\
-                                    {^{for current.nodes}}\
+                                    {^{for current.members}}\
                                         {^{item/}}\
                                     {{/for}}\
                                 </div>',
                 breadcrumbTemplate: '<div class="explorer-breadcrumb">\
-                                        <i class="fa fa-caret-down"></i>\
                                         <i class="fa fa-folder-open-o"></i>\
-                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
                                     </div>',
                 itemTemplate:   '<div class="explorer-item">\
-                                    {{if data.type === "sc:collection"}}\
+                                    {{if getIIIFResourceType().value === "sc:collection"}}\
                                         <i class="fa fa-folder"></i>\
-                                        <a id="item-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>label}}">{{>label}}</a>\
-                                    {{/if}}\
-                                    {{if data.type === "sc:manifest"}}\
+                                        <a id="folder-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>__jsonld.label}}">\
+                                            {{>__jsonld.label}}\
+                                        </a>\
+                                    {{else}}\
                                         <i class="fa fa-file-text-o"></i>\
-                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>__jsonld.label}}">\
+                                            {{>__jsonld.label}}\
+                                        </a>\
                                     {{/if}}\
                                 </div>'
             });
@@ -73,14 +75,13 @@ namespace IIIFComponents {
                 item: {
                     init: function (tagCtx, linkCtx, ctx) {
                         this.data = tagCtx.view.data;
-                        this.data.parents
                     },
                     onAfterLink: function () {
                         var self: any = this;
 
                         self.contents('.explorer-item')
                             .on('click', 'a.explorer-folder-link', function() {
-                                that.openFolder(self.data);
+                                that._switchToFolder(self.data);
                             })
                             .on('click', 'a.explorer-item-link', function() {
                                 that._emit(ExplorerComponent.Events.EXPLORER_NODE_SELECTED, self.data);
@@ -94,97 +95,80 @@ namespace IIIFComponents {
         }
 
         protected _draw(): void {
+            console.log(this._current);
             this._$view.link($.templates.pageTemplate, { parents: this._parents, current: this._current });
         }
 
-        protected _sortCollectionsFirst(a: Manifold.ITreeNode, b: Manifold.ITreeNode): number {
-            if (a.data.type === b.data.type) {
+        protected _sortCollectionsFirst(a: Manifesto.IIIFResource, b: Manifesto.IIIFResource): number {
+            let aType = a.getIIIFResourceType().value;
+            let bType = b.getIIIFResourceType().value;
+            if (aType === bType) {
                 // Alphabetical
-                return a.label < b.label ? -1 : 1;
+                return a.__jsonld.label < b.__jsonld.label ? -1 : 1;
             }
             // Collections first
-            return b.data.type.indexOf('collection') - a.data.type.indexOf('collection');
+            return bType.indexOf('collection') - aType.indexOf('collection');
         }
 
-        public gotoBreadcrumb(node: Manifold.ITreeNode): void {
+        public gotoBreadcrumb(node: Manifesto.Collection): void {
             let index: number = this._parents.indexOf(node);
             this._current = this._parents[index];
             this._parents = this._parents.slice(0, index + 1);
             this._draw();
         }
 
-        protected _switchToFolder(node: Manifold.ITreeNode): void {
-            node.nodes.sort(this._sortCollectionsFirst);
-            this._parents.push(node);
-            this._current = node;
-            this._draw();
-        }
-
-        public openFolder(node: Manifold.ITreeNode): void {
-            if (!node.data.isLoaded) {
-                let that = this;
-                node.data.load().then(function (collection: Manifesto.Collection): void {
-                    console.log(collection);
-                    node.nodes = collection.members.map(function (op: Manifesto.IIIFResource): Manifesto.TreeNode {
-                        // TODO: OFFICIAL CONVERSION MUST EXIST
-                        let data: any = op;
-                        data.type = op.__jsonld['@type'].toLowerCase();
-                        let treeNode: Manifesto.TreeNode = new Manifesto.TreeNode(op.__jsonld.label, data);
-                        treeNode.parentNode = node;
-                        return treeNode;
-                    });
-                    that._switchToFolder(node);
-                });
+        protected _switchToFolder(node: Manifesto.Collection): void {
+            if (!node.members.length) {
+                node.load().then(this._switchToFolder.bind(this));
             } else {
-                this._switchToFolder(node);
+                node.members.sort(this._sortCollectionsFirst);
+                this._parents.push(node);
+                this._current = node;
+                this._draw();
             }
         }
 
-        protected _followWithin(json: any, callback: (n: any) => any): any {
-          console.log(json.label);
-          let url: any = json.within;
-          let node: Manifesto.TreeNode = new Manifesto.TreeNode(json.label, json);
-          if ($.isArray(url)) { // TODO: Handle arrays
-            callback([]);
-          }
-          let that: any = this;
-          $.ajax({
-            url: url,
-            dataType: 'json'
-          })
-          .done(function (parent:any) {
-            if (typeof parent.within !== 'undefined') {
-              that._followWithin(parent, function(array:any) {
-                array.push(node);
-                callback(array);
-              });
-            } else {
-              callback([parent, node]);
-            }
-          })
-          .fail(function () {
-            callback([node]);
-          });
+        protected _followWithin(node: Manifesto.IIIFResource): Promise<Manifesto.IIIFResource[]> {
+            return new Promise<any>((resolve, reject) => {
+                let url: any = node.__jsonld.within;
+                if ($.isArray(url)) { // TODO: Handle arrays
+                    resolve([]);
+                }
+                let that: any = this;
+                Manifesto.Utils.loadResource(url)
+                    .then(function (parent:any) {
+                      let parentManifest = manifesto.create(parent);
+                      console.log('manifest', parentManifest);
+                      if (typeof parentManifest.__jsonld.within !== 'undefined') {
+                          that._followWithin(parentManifest).then(function(array: Manifesto.IIIFResource[]) {
+                              array.push(node);
+                              resolve(array);
+                          });
+                      } else {
+                          resolve([parentManifest, node]);
+                      }
+                    }).catch(reject);
+            });
         }
 
         public databind(): void {
-            let root: Manifold.ITreeNode = this.options.helper.getTree(this.options.topRangeIndex, this.options.treeSortType);
-            console.log(root);
-            root.nodes.sort(this._sortCollectionsFirst);
-            if (typeof root.data.__jsonld.within !== 'undefined') {
-              let that = this;
-              this._followWithin(root.data.__jsonld, function (parents: any) {
-                that._parents = parents;
-                if (root.data.__jsonld['@type'].match(/Manifest/i)) {
-                  that._current = parents[parents.length - 1];
-                }
-                that._draw();
-              });
-              root.label = "Loading...";
+            let root: Manifesto.IIIFResource = this.options.helper.iiifResource;
+            console.log('root', root);
+            if (typeof root.__jsonld.within !== 'undefined') {
+                let that = this;
+                this._followWithin(root).then(function (parents: Manifesto.IIIFResource[]) {
+                    that._parents = parents;
+                    if (root.isCollection()) {
+                        that._switchToFolder(<Manifesto.Collection>parents.pop());
+                    } else {
+                        that._draw();
+                    }
+                });
             }
-            this._parents.push(root);
-            this._current = root;
-            this._draw();
+            console.log('r.iC()', root.isCollection());
+            if (root.isCollection()) {
+                this._switchToFolder(<Manifesto.Collection>root);
+            }
         }
 
         protected _getDefaultOptions(): IExplorerComponentOptions {

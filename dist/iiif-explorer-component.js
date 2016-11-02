@@ -32,23 +32,25 @@ var IIIFComponents;
                                 </div>\
                                 <hr/>\
                                 <div class="items">\
-                                    {^{for current.nodes}}\
+                                    {^{for current.members}}\
                                         {^{item/}}\
                                     {{/for}}\
                                 </div>',
                 breadcrumbTemplate: '<div class="explorer-breadcrumb">\
-                                        <i class="fa fa-caret-down"></i>\
                                         <i class="fa fa-folder-open-o"></i>\
-                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                        <a id="breadcrumb-link-{{>id}}" class="explorer-breadcrumb-link" href="#" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
                                     </div>',
                 itemTemplate: '<div class="explorer-item">\
-                                    {{if data.type === "sc:collection"}}\
+                                    {{if getIIIFResourceType().value === "sc:collection"}}\
                                         <i class="fa fa-folder"></i>\
-                                        <a id="item-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>label}}">{{>label}}</a>\
-                                    {{/if}}\
-                                    {{if data.type === "sc:manifest"}}\
+                                        <a id="folder-link-{{>id}}" class="explorer-folder-link" href="#" title="{{>__jsonld.label}}">\
+                                            {{>__jsonld.label}}\
+                                        </a>\
+                                    {{else}}\
                                         <i class="fa fa-file-text-o"></i>\
-                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>label}}">{{>label}}</a>\
+                                        <a id="item-link-{{>id}}" class="explorer-item-link" href="#" title="{{>__jsonld.label}}">\
+                                            {{>__jsonld.label}}\
+                                        </a>\
                                     {{/if}}\
                                 </div>'
             });
@@ -69,13 +71,12 @@ var IIIFComponents;
                 item: {
                     init: function (tagCtx, linkCtx, ctx) {
                         this.data = tagCtx.view.data;
-                        this.data.parents;
                     },
                     onAfterLink: function () {
                         var self = this;
                         self.contents('.explorer-item')
                             .on('click', 'a.explorer-folder-link', function () {
-                            that.openFolder(self.data);
+                            that._switchToFolder(self.data);
                         })
                             .on('click', 'a.explorer-item-link', function () {
                             that._emit(ExplorerComponent.Events.EXPLORER_NODE_SELECTED, self.data);
@@ -87,15 +88,18 @@ var IIIFComponents;
             return success;
         };
         ExplorerComponent.prototype._draw = function () {
+            console.log(this._current);
             this._$view.link($.templates.pageTemplate, { parents: this._parents, current: this._current });
         };
         ExplorerComponent.prototype._sortCollectionsFirst = function (a, b) {
-            if (a.data.type === b.data.type) {
+            var aType = a.getIIIFResourceType().value;
+            var bType = b.getIIIFResourceType().value;
+            if (aType === bType) {
                 // Alphabetical
-                return a.label < b.label ? -1 : 1;
+                return a.__jsonld.label < b.__jsonld.label ? -1 : 1;
             }
             // Collections first
-            return b.data.type.indexOf('collection') - a.data.type.indexOf('collection');
+            return bType.indexOf('collection') - aType.indexOf('collection');
         };
         ExplorerComponent.prototype.gotoBreadcrumb = function (node) {
             var index = this._parents.indexOf(node);
@@ -104,77 +108,59 @@ var IIIFComponents;
             this._draw();
         };
         ExplorerComponent.prototype._switchToFolder = function (node) {
-            node.nodes.sort(this._sortCollectionsFirst);
-            this._parents.push(node);
-            this._current = node;
-            this._draw();
-        };
-        ExplorerComponent.prototype.openFolder = function (node) {
-            if (!node.data.isLoaded) {
-                var that_1 = this;
-                node.data.load().then(function (collection) {
-                    console.log(collection);
-                    node.nodes = collection.members.map(function (op) {
-                        // TODO: OFFICIAL CONVERSION MUST EXIST
-                        var data = op;
-                        data.type = op.__jsonld['@type'].toLowerCase();
-                        var treeNode = new Manifesto.TreeNode(op.__jsonld.label, data);
-                        treeNode.parentNode = node;
-                        return treeNode;
-                    });
-                    that_1._switchToFolder(node);
-                });
+            if (!node.members.length) {
+                node.load().then(this._switchToFolder.bind(this));
             }
             else {
-                this._switchToFolder(node);
+                node.members.sort(this._sortCollectionsFirst);
+                this._parents.push(node);
+                this._current = node;
+                this._draw();
             }
         };
-        ExplorerComponent.prototype._followWithin = function (json, callback) {
-            console.log(json.label);
-            var url = json.within;
-            var node = new Manifesto.TreeNode(json.label, json);
-            if ($.isArray(url)) {
-                callback([]);
-            }
-            var that = this;
-            $.ajax({
-                url: url,
-                dataType: 'json'
-            })
-                .done(function (parent) {
-                if (typeof parent.within !== 'undefined') {
-                    that._followWithin(parent, function (array) {
-                        array.push(node);
-                        callback(array);
-                    });
+        ExplorerComponent.prototype._followWithin = function (node) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var url = node.__jsonld.within;
+                if ($.isArray(url)) {
+                    resolve([]);
                 }
-                else {
-                    callback([parent, node]);
-                }
-            })
-                .fail(function () {
-                callback([node]);
+                var that = _this;
+                Manifesto.Utils.loadResource(url)
+                    .then(function (parent) {
+                    var parentManifest = manifesto.create(parent);
+                    console.log('manifest', parentManifest);
+                    if (typeof parentManifest.__jsonld.within !== 'undefined') {
+                        that._followWithin(parentManifest).then(function (array) {
+                            array.push(node);
+                            resolve(array);
+                        });
+                    }
+                    else {
+                        resolve([parentManifest, node]);
+                    }
+                }).catch(reject);
             });
         };
         ExplorerComponent.prototype.databind = function () {
-            var root = this.options.helper.getTree(this.options.topRangeIndex, this.options.treeSortType);
-            console.log(root);
-            root.nodes.sort(this._sortCollectionsFirst);
-            if (typeof root.data.__jsonld.within !== 'undefined') {
-                var that_2 = this;
-                this._followWithin(root.data.__jsonld, function (parents) {
-                    that_2._parents = parents;
-                    if (root.data.__jsonld['@type'].match(/Manifest/i)) {
-                        that_2._current = parents[parents.length - 1];
+            var root = this.options.helper.iiifResource;
+            console.log('root', root);
+            if (typeof root.__jsonld.within !== 'undefined') {
+                var that_1 = this;
+                this._followWithin(root).then(function (parents) {
+                    that_1._parents = parents;
+                    if (root.isCollection()) {
+                        that_1._switchToFolder(parents.pop());
                     }
-                    console.log(parents);
-                    that_2._draw();
+                    else {
+                        that_1._draw();
+                    }
                 });
-                root.label = "Loading...";
             }
-            this._parents.push(root);
-            this._current = root;
-            this._draw();
+            console.log('r.iC()', root.isCollection());
+            if (root.isCollection()) {
+                this._switchToFolder(root);
+            }
         };
         ExplorerComponent.prototype._getDefaultOptions = function () {
             return {

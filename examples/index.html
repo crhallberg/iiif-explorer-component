@@ -45,7 +45,7 @@
                 component.on('explorerNodeSelected', function(args) {
                     var node = args[0];
                     console.log(node);
-                    alert('selected: ' + node.label);
+                    alert('selected: ' + node.__jsonld.label);
                 });
 
                 component.databind();

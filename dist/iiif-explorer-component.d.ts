@@ -8,11 +8,10 @@ declare namespace IIIFComponents {
         constructor(options: IExplorerComponentOptions);
         protected _init(): boolean;
         protected _draw(): void;
-        protected _sortCollectionsFirst(a: Manifold.ITreeNode, b: Manifold.ITreeNode): number;
-        gotoBreadcrumb(node: Manifold.ITreeNode): void;
-        protected _switchToFolder(node: Manifold.ITreeNode): void;
-        openFolder(node: Manifold.ITreeNode): void;
-        protected _followWithin(json: any, callback: (n: any) => any): any;
+        protected _sortCollectionsFirst(a: Manifesto.IIIFResource, b: Manifesto.IIIFResource): number;
+        gotoBreadcrumb(node: Manifesto.Collection): void;
+        protected _switchToFolder(node: Manifesto.Collection): void;
+        protected _followWithin(node: Manifesto.IIIFResource): Promise<Manifesto.IIIFResource[]>;
         databind(): void;
         protected _getDefaultOptions(): IExplorerComponentOptions;
         protected _resize(): void;
