@@ -129,7 +129,6 @@ var IIIFComponents;
                 Manifesto.Utils.loadResource(url)
                     .then(function (parent) {
                     var parentManifest = manifesto.create(parent);
-                    console.log('manifest', parentManifest);
                     if (typeof parentManifest.__jsonld.within !== 'undefined') {
                         that._followWithin(parentManifest).then(function (array) {
                             array.push(node);
@@ -144,21 +143,18 @@ var IIIFComponents;
         };
         ExplorerComponent.prototype.databind = function () {
             var root = this.options.helper.iiifResource;
-            console.log('root', root);
             if (typeof root.__jsonld.within !== 'undefined') {
                 var that_1 = this;
                 this._followWithin(root).then(function (parents) {
                     that_1._parents = parents;
-                    if (root.isCollection()) {
-                        that_1._switchToFolder(parents.pop());
+                    var start = parents.pop();
+                    while (!start.isCollection()) {
+                        start = parents.pop();
                     }
-                    else {
-                        that_1._draw();
-                    }
+                    that_1._switchToFolder(start);
                 });
             }
-            console.log('r.iC()', root.isCollection());
-            if (root.isCollection()) {
+            else if (root.isCollection()) {
                 this._switchToFolder(root);
             }
         };

@@ -138,7 +138,6 @@ namespace IIIFComponents {
                 Manifesto.Utils.loadResource(url)
                     .then(function (parent:any) {
                       let parentManifest = manifesto.create(parent);
-                      console.log('manifest', parentManifest);
                       if (typeof parentManifest.__jsonld.within !== 'undefined') {
                           that._followWithin(parentManifest).then(function(array: Manifesto.IIIFResource[]) {
                               array.push(node);
@@ -153,20 +152,17 @@ namespace IIIFComponents {
 
         public databind(): void {
             let root: Manifesto.IIIFResource = this.options.helper.iiifResource;
-            console.log('root', root);
             if (typeof root.__jsonld.within !== 'undefined') {
                 let that = this;
                 this._followWithin(root).then(function (parents: Manifesto.IIIFResource[]) {
                     that._parents = parents;
-                    if (root.isCollection()) {
-                        that._switchToFolder(<Manifesto.Collection>parents.pop());
-                    } else {
-                        that._draw();
+                    let start = parents.pop();
+                    while (!start.isCollection()) {
+                        start = parents.pop();
                     }
+                    that._switchToFolder(<Manifesto.Collection>start);
                 });
-            }
-            console.log('r.iC()', root.isCollection());
-            if (root.isCollection()) {
+            } else if (root.isCollection()) {
                 this._switchToFolder(<Manifesto.Collection>root);
             }
         }
