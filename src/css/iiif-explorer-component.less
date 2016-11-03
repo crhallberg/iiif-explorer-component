@@ -1,3 +1,5 @@
+@img-path: "../examples/img/";
+
 .iiif-explorer-component {
     line-height: 1.2;
 
@@ -7,6 +9,20 @@
 
         &:hover { text-decoration: underline; }
     }
+
+    .explorer-breadcrumb,
+    .explorer-folder,
+    .explorer-resource {
+      padding-left: 20px;
+      background-position: 1px center;
+      background-repeat: no-repeat;
+    }
+    .explorer-breadcrumb {
+      background-image: url('@{img-path}folder-open.png');
+      background-position: 0 center;
+    }
+    .explorer-folder { background-image: url('@{img-path}folder-closed.png'); }
+    .explorer-resource { background-image: url('@{img-path}resource.png'); }
 
     .selected {
         background-color: #000;

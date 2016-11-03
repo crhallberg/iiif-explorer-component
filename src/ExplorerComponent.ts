@@ -40,18 +40,15 @@ namespace IIIFComponents {
                                     {{/for}}\
                                 </div>',
                 breadcrumbTemplate: '<div class="explorer-breadcrumb explorer-item">\
-                                        <i class="fa fa-folder-open-o"></i>\
                                         <a class="explorer-breadcrumb-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
                                     </div>',
                 itemTemplate:  '{{if getIIIFResourceType().value === "sc:collection"}}\
                                     <div class="explorer-folder {{:~itemClass(id)}}">\
-                                        <i class="fa fa-folder"></i>\
                                         <a class="explorer-folder-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">\
                                             {{>__jsonld.label}}\
                                         </a>\
                                 {{else}}\
                                     <div class="explorer-resource {{:~itemClass(id)}}">\
-                                        <i class="fa fa-file-text-o"></i>\
                                         <a class="explorer-item-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">\
                                             {{>__jsonld.label}}\
                                         </a>\
