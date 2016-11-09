@@ -133,7 +133,7 @@ namespace IIIFComponents {
         }
 
         protected _switchToFolder(node: Manifesto.Collection): void {
-            if (!node.members.length) {
+            if (!node.isLoaded) {
                 node.load().then(this._switchToFolder.bind(this));
             } else {
                 node.members.sort(this._sortCollectionsFirst);

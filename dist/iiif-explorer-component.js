@@ -121,7 +121,7 @@ var IIIFComponents;
             this._draw();
         };
         ExplorerComponent.prototype._switchToFolder = function (node) {
-            if (!node.members.length) {
+            if (!node.isLoaded) {
                 node.load().then(this._switchToFolder.bind(this));
             }
             else {
