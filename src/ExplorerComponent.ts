@@ -40,17 +40,17 @@ namespace IIIFComponents {
                                     {{/for}}\
                                 </div>',
                 breadcrumbTemplate: '<div class="explorer-breadcrumb explorer-item">\
-                                        <a class="explorer-breadcrumb-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
+                                        <a class="explorer-breadcrumb-link explorer-link" href="{{>id}}" title="{{>label}}">{{>label}}</a>\
                                     </div>',
                 itemTemplate:  '{{if getIIIFResourceType().value === "sc:collection"}}\
                                     <div class="explorer-folder {{:~itemClass(id)}}">\
-                                        <a class="explorer-folder-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">\
-                                            {{>__jsonld.label}}\
+                                        <a class="explorer-folder-link explorer-link" href="{{>id}}" title="{{>label}}">\
+                                            {{>label}}\
                                         </a>\
                                 {{else}}\
                                     <div class="explorer-resource {{:~itemClass(id)}}">\
-                                        <a class="explorer-item-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">\
-                                            {{>__jsonld.label}}\
+                                        <a class="explorer-item-link explorer-link" href="{{>id}}" title="{{>label}}">\
+                                            {{>label}}\
                                         </a>\
                                 {{/if}}\
                                 </div>'
@@ -68,6 +68,7 @@ namespace IIIFComponents {
                 breadcrumb: {
                     init: function (tagCtx, linkCtx, ctx) {
                         this.data = tagCtx.view.data;
+                        this.data.label = Manifesto.TranslationCollection.getValue(this.data.getLabel());
                     },
                     onAfterLink: function () {
                         var self: any = this;
@@ -83,6 +84,7 @@ namespace IIIFComponents {
                 item: {
                     init: function (tagCtx, linkCtx, ctx) {
                         this.data = tagCtx.view.data;
+                        this.data.label = Manifesto.TranslationCollection.getValue(this.data.getLabel());
                     },
                     onAfterLink: function () {
                         var self: any = this;
@@ -119,7 +121,9 @@ namespace IIIFComponents {
             let bType = b.getIIIFResourceType().value;
             if (aType === bType) {
                 // Alphabetical
-                return a.__jsonld.label < b.__jsonld.label ? -1 : 1;
+                let aLabel = Manifesto.TranslationCollection.getValue(a.getLabel());
+                let bLabel = Manifesto.TranslationCollection.getValue(b.getLabel());
+                return aLabel < bLabel ? -1 : 1;
             }
             // Collections first
             return bType.indexOf('collection') - aType.indexOf('collection');
@@ -145,15 +149,15 @@ namespace IIIFComponents {
 
         protected _followWithin(node: Manifesto.IIIFResource): Promise<Manifesto.IIIFResource[]> {
             return new Promise<any>((resolve, reject) => {
-                let url: any = node.__jsonld.within;
-                if ($.isArray(url)) { // TODO: Handle arrays
+                let url: any = node.getProperty('within');
+                if ($.isArray(url)) { // TODO: Handle multiple within values
                     resolve([]);
                 }
                 let that: any = this;
                 Manifesto.Utils.loadResource(url)
                     .then(function (parent:any) {
                       let parentManifest = manifesto.create(parent);
-                      if (typeof parentManifest.__jsonld.within !== 'undefined') {
+                      if (parentManifest.getProperty('within')) {
                           that._followWithin(parentManifest).then(function(array: Manifesto.IIIFResource[]) {
                               array.push(node);
                               resolve(array);
@@ -167,7 +171,7 @@ namespace IIIFComponents {
 
         public databind(): void {
             let root: Manifesto.IIIFResource = this.options.helper.iiifResource;
-            if (typeof root.__jsonld.within !== 'undefined') {
+            if (root.getProperty('within')) {
                 let that = this;
                 this._followWithin(root).then(function (parents: Manifesto.IIIFResource[]) {
                     that._parents = parents;

@@ -44,8 +44,8 @@
 
                 component.on('explorerNodeSelected', function(args) {
                     var node = args[0];
-                    console.log(node);
-                    alert('selected: ' + node.__jsonld.label);
+                    console.log('selected', node);
+                    alert('selected: ' + Manifesto.TranslationCollection.getValue(node.getLabel()));
                 });
 
                 component.databind();

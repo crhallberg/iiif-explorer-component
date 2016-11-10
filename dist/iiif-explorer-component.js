@@ -37,17 +37,17 @@ var IIIFComponents;
                                     {{/for}}\
                                 </div>',
                 breadcrumbTemplate: '<div class="explorer-breadcrumb explorer-item">\
-                                        <a class="explorer-breadcrumb-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">{{>__jsonld.label}}</a>\
+                                        <a class="explorer-breadcrumb-link explorer-link" href="{{>id}}" title="{{>label}}">{{>label}}</a>\
                                     </div>',
                 itemTemplate: '{{if getIIIFResourceType().value === "sc:collection"}}\
                                     <div class="explorer-folder {{:~itemClass(id)}}">\
-                                        <a class="explorer-folder-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">\
-                                            {{>__jsonld.label}}\
+                                        <a class="explorer-folder-link explorer-link" href="{{>id}}" title="{{>label}}">\
+                                            {{>label}}\
                                         </a>\
                                 {{else}}\
                                     <div class="explorer-resource {{:~itemClass(id)}}">\
-                                        <a class="explorer-item-link explorer-link" href="{{>id}}" title="{{>__jsonld.label}}">\
-                                            {{>__jsonld.label}}\
+                                        <a class="explorer-item-link explorer-link" href="{{>id}}" title="{{>label}}">\
+                                            {{>label}}\
                                         </a>\
                                 {{/if}}\
                                 </div>'
@@ -63,6 +63,7 @@ var IIIFComponents;
                 breadcrumb: {
                     init: function (tagCtx, linkCtx, ctx) {
                         this.data = tagCtx.view.data;
+                        this.data.label = Manifesto.TranslationCollection.getValue(this.data.getLabel());
                     },
                     onAfterLink: function () {
                         var self = this;
@@ -77,6 +78,7 @@ var IIIFComponents;
                 item: {
                     init: function (tagCtx, linkCtx, ctx) {
                         this.data = tagCtx.view.data;
+                        this.data.label = Manifesto.TranslationCollection.getValue(this.data.getLabel());
                     },
                     onAfterLink: function () {
                         var self = this;
@@ -109,7 +111,9 @@ var IIIFComponents;
             var bType = b.getIIIFResourceType().value;
             if (aType === bType) {
                 // Alphabetical
-                return a.__jsonld.label < b.__jsonld.label ? -1 : 1;
+                var aLabel = Manifesto.TranslationCollection.getValue(a.getLabel());
+                var bLabel = Manifesto.TranslationCollection.getValue(b.getLabel());
+                return aLabel < bLabel ? -1 : 1;
             }
             // Collections first
             return bType.indexOf('collection') - aType.indexOf('collection');
@@ -134,7 +138,7 @@ var IIIFComponents;
         ExplorerComponent.prototype._followWithin = function (node) {
             var _this = this;
             return new Promise(function (resolve, reject) {
-                var url = node.__jsonld.within;
+                var url = node.getProperty('within');
                 if ($.isArray(url)) {
                     resolve([]);
                 }
@@ -142,7 +146,7 @@ var IIIFComponents;
                 Manifesto.Utils.loadResource(url)
                     .then(function (parent) {
                     var parentManifest = manifesto.create(parent);
-                    if (typeof parentManifest.__jsonld.within !== 'undefined') {
+                    if (parentManifest.getProperty('within')) {
                         that._followWithin(parentManifest).then(function (array) {
                             array.push(node);
                             resolve(array);
@@ -156,7 +160,7 @@ var IIIFComponents;
         };
         ExplorerComponent.prototype.databind = function () {
             var root = this.options.helper.iiifResource;
-            if (typeof root.__jsonld.within !== 'undefined') {
+            if (root.getProperty('within')) {
                 var that_1 = this;
                 this._followWithin(root).then(function (parents) {
                     that_1._parents = parents;
