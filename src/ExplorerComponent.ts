@@ -58,7 +58,7 @@ namespace IIIFComponents {
 
             $.views.helpers({
                   itemClass: function(id) {
-                      return typeof this._selected !== 'undefined' && id === this._selected.id
+                      return this._selected && id === this._selected.id
                           ? 'explorer-item selected'
                           : 'explorer-item';
                   }.bind(this)
@@ -91,6 +91,7 @@ namespace IIIFComponents {
 
                         self.contents('.explorer-item')
                             .on('click', 'a.explorer-folder-link', function() {
+                                that._selected = null;
                                 that._switchToFolder(self.data);
                                 return false;
                             })
@@ -140,7 +141,6 @@ namespace IIIFComponents {
             if (!node.isLoaded) {
                 node.load().then(this._switchToFolder.bind(this));
             } else {
-                console.log(node);
                 node.members.sort(this._sortCollectionsFirst);
                 this._parents.push(node);
                 this._current = node;
