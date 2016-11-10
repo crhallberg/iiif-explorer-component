@@ -58,7 +58,7 @@ namespace IIIFComponents {
 
             $.views.helpers({
                   itemClass: function(id) {
-                      return id === this._selected.id
+                      return typeof this._selected !== 'undefined' && id === this._selected.id
                           ? 'explorer-item selected'
                           : 'explorer-item';
                   }.bind(this)
@@ -140,6 +140,7 @@ namespace IIIFComponents {
             if (!node.isLoaded) {
                 node.load().then(this._switchToFolder.bind(this));
             } else {
+                console.log(node);
                 node.members.sort(this._sortCollectionsFirst);
                 this._parents.push(node);
                 this._current = node;
